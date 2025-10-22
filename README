@@ -26,7 +26,25 @@ This system has the following requirements:
         3. start & stop commands
 
 Design
+======
 1) Applicaiton will initialize control broadcast channel(tokio channel), reciever of this channel will be with both DAC and ADC interface
 2) Application will initialize DAC config data channel to initialize with default DAC sample array
 3) Application will support trigger over control channel  and also start/stop, amplitude and frequency change over control channel
 4) Application will create DAC data channel that drives laser and provides input to ADC, this will be broadcast channel as well.
+
+Status
+=====
+- [ ] DAC interface is working
+- [ ] ADC interface is working, but not tested fully
+- [ ] DAC and ADC interface have cargo test support but not yet fully integrated.
+- [ ] run cargo test to verify all tests pass.
+- [ ] not tested configuring default sample array for DAC.
+
+Missing Features
+================
+
+- [] deviation tolerance support
+- [] both sampling loop are not adaptive to MSPS and also need better partitioning of recv channel data and tick. Tokio ticks are not accurate but simulated for actual hardware implementation this should be improved.
+- [] integration test application should work, i expect issues with ADC as i am not sure how to accurately imlement it. In my experience i have interfaced ADC device where i read value of it and add quantization error correction to it, but not sure
+ how quantization should be applied, few wiki pages and google does show zero crossing based approach but i am not implementing in the interest of time.
+ - [] i have not implemented any error handling for the application.
