@@ -1,0 +1,14 @@
+[package]
+name = "laser_controller"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.39.0", features = ["full", "rt-multi-thread", "time", "tracing"] }
+tracing = { version = "0.1.40", features = ["std"] }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "serde"] }
+anyhow = "1.0.99"
+
+[[example]]
+name = "laser_controller"
+path = "examples/laser_controller.rs"

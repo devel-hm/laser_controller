@@ -1,0 +1,32 @@
+Problem Description
+Create a design for a laser control system which drives a laser with a simple sine wave.
+This system has the following requirements:
+1. a waveform is transmitted through an external DAC
+    1. The waveform is 1K samples at 1MSPS
+    2. the start of this waveform should be synchronized to an external hardware trigger
+2. A 1MHz ADC acquires data periodically to be used to update the transmitted waveform
+    1. This acquisition should be synchronized (perhaps with some delay) with the
+        transmitted waveform
+3. Process the ADC data to validate the transmitted waveform
+    1. calculate amplitude, mean, and frequency of the waveform
+    2. output boolean signal if the waveform is within spec
+4. Calculate and apply new waveforms based on given parameters
+    1. input will be amplitude and frequency of the waveform,
+    2. a new waveform should be a sin wave at the specified frequency and amplitude.
+5. An asynchronous interface to a controlling microcontroller
+    1. This exposes the following functionality
+        1. waveform parameters
+            1. target amplitude,
+            2. target frequency
+            3. acceptable deviation tolerance
+        2. Initial / default waveform
+            1. amplitude,
+            2. frequency
+            3. acceptable deviation tolerance
+        3. start & stop commands
+
+Design
+1) Applicaiton will initialize control broadcast channel(tokio channel), reciever of this channel will be with both DAC and ADC interface
+2) Application will initialize DAC config data channel to initialize with default DAC sample array
+3) Application will support trigger over control channel  and also start/stop, amplitude and frequency change over control channel
+4) Application will create DAC data channel that drives laser and provides input to ADC, this will be broadcast channel as well.
