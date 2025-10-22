@@ -350,7 +350,7 @@ mod tests {
         // Spawn the DAC run loop in a separate task
         let dac_config = config.clone();
         let dac_running = dac.running.clone();
-        let dac_task = tokio::spawn(async move {
+        let _dac_task = tokio::spawn(async move {
             dac.run().await;
         });
         
@@ -383,7 +383,6 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(*dac_running.lock().await);
         
-        info!("Stopping DAC");
         command_tx.send(DacCommand::Stop).await.unwrap();
         tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(!*dac_running.lock().await);
@@ -546,7 +545,6 @@ mod tests {
                 },
                 Err(tokio::sync::broadcast::error::TryRecvError::Lagged(n)) => {
                     error!("Broadcast receiver lagged by {} messages", n);
-                    // Continue receiving from current position
                 },
                 Err(e) => {
                     error!("Broadcast error: {:?}", e);

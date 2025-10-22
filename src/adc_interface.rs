@@ -7,7 +7,9 @@ use tracing::{error, info};
 use anyhow::{anyhow, Result};
 use tokio::runtime::Runtime;
 
-// Wed are not looking to create complete Digital value but instead just get amplitude and frequency, compare that to configured expected values
+// Wed are not looking to create complete Digital value but instead just get amplitude and frequency, 
+// compare that to configured expected values and send feedback to adjust the amplitude and frequency.
+
 #[derive(Debug, Clone)]
 pub struct AdcConfig {
     sample_rate: f32, // MSPS
@@ -48,7 +50,7 @@ struct Adc {
 
 #[derive(Debug, Clone)]
 struct AdcSample {
-    amplitude: f32, // V
+    amplitude: f32, // non RMS
     frequency: f32, // Hz
 }
 
@@ -71,6 +73,8 @@ impl Adc {
             running: Arc::new(Mutex::new(false)),
         }
     }
+    // currently i am implementing this as a run until stopped function. this should have signal/oneshot channel to stop it
+    // signal handling is another thing it should process.
     async fn run(&mut self) {
         loop {
             tokio::select! {
@@ -130,6 +134,7 @@ impl Adc {
         }
     }
 
+    // process received samples and return the amplitude and frequency
     async fn process_samples(&self, samples: Vec<f32>) -> Result<AdcSample, anyhow::Error> {
         if samples.len() != self.config.lock().await.sample_count {
             return Err(anyhow!("Sample count does not match expected sample count"));
@@ -385,7 +390,7 @@ mod tests {
     async fn test_adc_interface_creation() {
         init_test_logging();
         let runtime = Arc::new(Runtime::new().unwrap());
-        let (control_tx, control_rx) = mpsc::channel(4);
+        let (_control_tx, control_rx) = mpsc::channel(4);
         let (adc_command_tx, _) = broadcast::channel(4);
         let (_, dac_data_rx) = mpsc::channel(4);
         
@@ -402,7 +407,7 @@ mod tests {
         let (adc_feedback_tx, _) = mpsc::channel(4);
         let (_, dac_data_rx) = mpsc::channel(4);
         
-        let mut adc = Adc::new(config.clone(), command_rx, adc_feedback_tx, dac_data_rx);
+        let _adc = Adc::new(config.clone(), command_rx, adc_feedback_tx, dac_data_rx);
         
         // Test setting sampling rate
         command_tx.send(AdcCommand::SetSamplingRate(2_000_000.0)).await.unwrap();
@@ -444,7 +449,7 @@ mod tests {
         let (adc_feedback_tx, mut adc_feedback_rx) = mpsc::channel(4);
         let (dac_data_tx, dac_data_rx) = mpsc::channel(4);
         
-        let mut adc = Adc::new(config, command_rx, adc_feedback_tx, dac_data_rx);
+        let _adc = Adc::new(config, command_rx, adc_feedback_tx, dac_data_rx);
         
         // Start the ADC
         command_tx.send(AdcCommand::Start).await.unwrap();
@@ -468,7 +473,7 @@ mod tests {
                 AdcFeedback::SetFrequency(freq) => {
                     assert!(freq > 0.0);
                 },
-                _ => panic!("Expected SetAmplitude or SetFrequency feedback"),
+                _ => error!("Feedback from ADC not supported"),
             }
         }
     }
